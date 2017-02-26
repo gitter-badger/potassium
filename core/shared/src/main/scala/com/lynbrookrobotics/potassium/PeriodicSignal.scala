@@ -183,6 +183,17 @@ abstract class PeriodicSignal[+T] { self =>
     // scalastyle:on
   }
 
+  def simpsonsIntegral[I <: Quantity[I] with TimeIntegral[_]](implicit derivEv: T => TimeDerivative[I]): PeriodicSignal[I] = {
+    // scalastyle:off
+    val previousValues = sliding(3, null.asInstanceOf[T])
+
+    previousValues.scanLeft(null.asInstanceOf[I]){(acc, velocites, dt) =>
+      val secondVelocity = velocites.dequeue._2.dequeue._1
+      (velocites.head * dt * 2 + secondVelocity * dt * 2 * 4.0 + velocites.last * dt * 2) / 6
+    }
+    //scalastyle:on
+  }
+
   /**
     * Creates a new periodic signal that returns the same value but also invokes the given callback
     * @param checkCallback the callback to run with each value calculated by the signal
