@@ -187,9 +187,13 @@ abstract class PeriodicSignal[+T] { self =>
     // scalastyle:off
     val previousValues = sliding(3, null.asInstanceOf[T])
 
-    previousValues.scanLeft(null.asInstanceOf[I]){(acc, velocites, dt) =>
-      val secondVelocity = velocites.dequeue._2.dequeue._1
-      (velocites.head * dt * 2 + secondVelocity * dt * 2 * 4.0 + velocites.last * dt * 2) / 6
+    previousValues.scanLeft(null.asInstanceOf[I]){(acc, velocities, dt) =>
+      if (velocities.head != null && velocities.last != null) {
+        val secondVelocity = velocities.dequeue._2.dequeue._1
+        acc + (2 * dt * velocities.head + 2 * dt * secondVelocity * 4.0 + 2 * dt * velocities.last) / 6
+      } else {
+        (velocities.last: TimeDerivative[I]) * dt
+      }
     }
     //scalastyle:on
   }
