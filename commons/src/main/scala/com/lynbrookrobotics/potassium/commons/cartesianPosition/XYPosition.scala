@@ -39,4 +39,33 @@ object XYPosition {
           distance * Math.sin(avrgAngle.toRadians))
     }
   }
+
+  def positionWithSimpsons(angle: Signal[Angle],
+                          distanceTraveled: Signal[Length]): PeriodicSignal[Point] = {
+    val initAngle = angle.get
+    val averageAngle = angle.toPeriodic.sliding(2, initAngle).map(angles =>
+      (angles.head + angles.last) / 2D)
+
+    val initDistanceTraveled = distanceTraveled.get
+    val deltaDistance = distanceTraveled.toPeriodic.sliding(2, initDistanceTraveled).map { distances =>
+      distances.last - distances.head
+    }
+
+    val velocity = deltaDistance.derivative
+    val velocityX = velocity.zip(averageAngle).map{v =>
+      val (speed, angle) = v
+      Math.cos(angle.toRadians) * speed
+    }
+    val velocityY = velocity.zip(averageAngle).map{v =>
+      val (speed, angle) = v
+      Math.sin(angle.toRadians) * speed
+    }
+
+    val xPosition = velocityX.simpsonsIntegral
+    val yPosition = velocityY.simpsonsIntegral
+
+    xPosition.zip(yPosition).map { pose =>
+      new Point(pose._1, pose._2)
+    }
+  }
 }
