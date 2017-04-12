@@ -7,6 +7,7 @@ import squants.Time
   * An interface that can schedule timed events.
   */
 trait Clock {
+  System.out.println("Here is a change")
   type Cancel = () => Unit
 
   /**

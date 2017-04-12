@@ -1,3 +1,5 @@
+import sbt.Keys.libraryDependencies
+
 enablePlugins(GitVersioning, TravisScalaStylePlugin)
 
 name := "potassium"
@@ -48,7 +50,9 @@ lazy val potassium = project.in(file(".")).
 
 lazy val core = crossProject.crossType(CrossType.Full).settings(
   name := "potassium-core",
-  libraryDependencies ++= sharedDependencies.value
+  libraryDependencies ++= sharedDependencies.value,
+  libraryDependencies += "edu.wpi.first" % "wpilib" % "2017.1.1",
+  libraryDependencies += "edu.wpi.first" % "networktables" % "2017.1.1"
 ).jvmSettings(libraryDependencies ++= jvmDependencies).jsSettings(
   requiresDOM := true,
   coverageEnabled := false
