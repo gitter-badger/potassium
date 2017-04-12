@@ -65,7 +65,6 @@ abstract class Component[T](period: Time)(implicit val clock: Clock) {
     */
   def applySignal(signal: T): Unit
 
-  val output = new StringBuffer()
   var ticksPassedCounter = 0
   val maxTicksPassed = 3
   val numbers = new util.ArrayList[(Double, Double)]
