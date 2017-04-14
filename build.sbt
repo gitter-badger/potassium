@@ -4,6 +4,8 @@ enablePlugins(GitVersioning, TravisScalaStylePlugin)
 
 name := "potassium"
 
+offline := true
+
 organization in ThisBuild := "com.lynbrookrobotics"
 
 val potassiumVersion = "0.1.0"

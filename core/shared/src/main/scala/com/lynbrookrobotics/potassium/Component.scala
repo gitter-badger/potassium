@@ -1,15 +1,11 @@
 package com.lynbrookrobotics.potassium
 
-import java.io.{FileWriter, PrintWriter}
+import java.io.PrintWriter
 import java.util
 
 import com.lynbrookrobotics.potassium.clock.Clock
 import edu.wpi.first.wpilibj.Timer
 import squants.Time
-
-object Counter {
-  var globalOVerrunCountThingy = 0
-}
 
 /**
   * Represents a single robotic component, which translates signal data into action
@@ -66,12 +62,12 @@ abstract class Component[T](period: Time)(implicit val clock: Clock) {
   def applySignal(signal: T): Unit
 
   var ticksPassedCounter = 0
-  val maxTicksPassed = 3
-  val numbers = new util.ArrayList[(Double, Double)]
+  val maxTicksPassed = 500
+  val numbers = new util.ArrayList[(Double, Double)](maxTicksPassed)
   clock(period) { dt =>
-
+    ticksPassedCounter += 1
     var tStart = 0.0
-    if (!(ticksPassedCounter > maxTicksPassed)) {
+    if (ticksPassedCounter < maxTicksPassed) {
       tStart = Timer.getFPGATimestamp
     }
 
@@ -88,19 +84,18 @@ abstract class Component[T](period: Time)(implicit val clock: Clock) {
 
     lastOutput = Some(value)
 
-    if (!(ticksPassedCounter > maxTicksPassed)) {
-      val tEnd = Timer.getFPGATimestamp
-      import Counter._
-      if (tEnd - tStart > 5) globalOVerrunCountThingy += 1
-      numbers.add((tStart, tEnd))
-    }
-    else {
-      val output = new PrintWriter(new FileWriter("timings.tsv"))
+    val returnThis = applySignal(value)
+
+    if (ticksPassedCounter == maxTicksPassed) {
+      val output = new PrintWriter(s"/tmp/timings_${getClass.getName}_${System.currentTimeMillis()}.tsv")
       numbers.forEach(t => output.println(t._1 + "\t" + t._2))
       output.flush()
       output.close()
+    } else if (ticksPassedCounter < maxTicksPassed) {
+      val tEnd = Timer.getFPGATimestamp
+      numbers.add((tStart, tEnd))
     }
 
-    applySignal(value)
+    returnThis
   }
 }
