@@ -88,6 +88,42 @@ abstract class Stream[T] {
   }
 
   /**
+    * Merges two streams with the the resulting stream being updated whenever either
+    * of its parents produce a new value. The resulting stream __does not__ have
+    * a periodic nature.
+    * @param other the stream to merge with
+    * @tparam O the type of values from the other stream
+    * @return a stream with the values from both streams brought together
+    */
+  def zipEager[O](other: Stream[O]): Stream[(T, O)] = {
+    val ret = new EagerZippedStream[T, O]
+    val ptr = WeakReference(ret)
+
+    var aCancel: Cancel = null
+    aCancel = this.foreach { a =>
+      ptr.get match {
+        case Some(s) =>
+          s.receiveA(a)
+        case None =>
+          aCancel()
+      }
+    }
+
+    var bCancel: Cancel = null
+
+    bCancel = other.foreach { b =>
+      ptr.get match {
+        case Some(s) =>
+          s.receiveB(b)
+        case None =>
+          bCancel()
+      }
+    }
+
+    ret
+  }
+
+  /**
     * Adds a listener for elements of this Signal. Callbacks will be executed
     * whenever a new value is published in order of when the callbacks were added.
     * Callbacks added first will be called first and callbacks added last will
